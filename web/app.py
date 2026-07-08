@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import os
+import time
 
 import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 
-from research_brief.agent.pipeline import run_research
 from research_brief.config import get_settings
-from research_brief.models import ResearchRequest
+from research_brief.jobs.worker import enqueue_research, get_job
+from research_brief.models import JobStatus, ResearchRequest
 
 load_dotenv()
 
@@ -23,11 +24,28 @@ st.set_page_config(
 
 
 @st.cache_data(show_spinner="Running research agent...")
-def _run_cached(request_json: str, _version: str = "v1") -> str:
+def _run_cached(request_json: str, _version: str = "v2") -> str:
     del _version
+    from research_brief.agent.pipeline import run_research
+
     request = ResearchRequest.model_validate_json(request_json)
     result = run_research(request)
     return result.model_dump_json()
+
+
+def _poll_job(job_id: str, timeout_seconds: int = 180) -> str:
+    deadline = time.time() + timeout_seconds
+    status_box = st.empty()
+    while time.time() < deadline:
+        job = get_job(job_id)
+        status_box.info(f"Job **{job_id[:8]}...** status: `{job.status.value}`")
+        if job.status == JobStatus.COMPLETED and job.result is not None:
+            status_box.empty()
+            return job.result.model_dump_json()
+        if job.status == JobStatus.FAILED:
+            raise RuntimeError(job.error or "Background job failed")
+        time.sleep(1.0)
+    raise TimeoutError("Background job timed out")
 
 
 def main() -> None:
@@ -52,6 +70,11 @@ def main() -> None:
         )
         fetch_mode = st.selectbox("Fetch mode", options=["live", "snippet"], index=0)
         synthesis_mode = st.selectbox("Synthesis mode", options=["template", "openai"], index=0)
+        run_async = st.toggle(
+            "Run as background job",
+            value=False,
+            help="Queues long research runs and polls for completion.",
+        )
         if synthesis_mode == "openai" and not (settings.openai_api_key or os.getenv("OPENAI_API_KEY")):
             st.warning("Set OPENAI_API_KEY in .env to enable OpenAI synthesis.")
         if search_provider in {"auto", "tavily"} and not settings.tavily_api_key:
@@ -76,7 +99,11 @@ def main() -> None:
     )
 
     try:
-        payload = _run_cached(request.model_dump_json())
+        if run_async:
+            job = enqueue_research(request)
+            payload = _poll_job(job.id)
+        else:
+            payload = _run_cached(request.model_dump_json())
         from research_brief.models import ResearchResult
 
         result = ResearchResult.model_validate_json(payload)
@@ -89,6 +116,9 @@ def main() -> None:
     c2.metric("Citation coverage", f"{result.citation_coverage_pct:.0f}%")
     c3.metric("Search", result.search_provider)
     c4.metric("Synthesis", result.synthesis_mode)
+
+    if result.trace_id:
+        st.caption(f"OpenTelemetry trace ID: `{result.trace_id}`")
 
     st.subheader("Brief")
     if result.synthesis_llm_used:

@@ -4,7 +4,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://research-brief-aqpfqsjyvybcrv594j4kk5.streamlit.app/)
-[![Tests](https://img.shields.io/badge/tests-23%20passed-brightgreen.svg)](#development)
+[![Tests](https://img.shields.io/badge/tests-29%20passed-brightgreen.svg)](#development)
 
 Portfolio GenAI/MLOps project: search → fetch → synthesize → validate, with optional Tavily web search and OpenAI synthesis gated by citation grounding checks.
 
@@ -81,6 +81,8 @@ research-brief/
 │   ├── search/         # Tavily + mock + fetch
 │   ├── synthesis/      # Template + OpenAI
 │   ├── validation/     # Citations + grounding
+│   ├── jobs/           # Async job queue (SQLite + thread pool)
+│   ├── tracing/        # OpenTelemetry + LangSmith spans
 │   └── api/            # FastAPI
 ├── web/app.py          # Streamlit UI
 ├── eval/               # Golden test cases
@@ -94,7 +96,11 @@ research-brief serve
 ```
 
 - `GET /health`
-- `POST /research` with JSON body:
+- `POST /research` — synchronous run
+- `POST /research/jobs` — enqueue background job
+- `GET /research/jobs/{job_id}` — poll job status/result
+
+Example body for `POST /research`:
 
 ```json
 {
@@ -105,6 +111,22 @@ research-brief serve
   "synthesis_mode": "template"
 }
 ```
+
+### Observability (optional)
+
+```bash
+pip install -e ".[observability,langsmith]"
+```
+
+```env
+OTEL_ENABLED=true
+OTEL_SERVICE_NAME=research-brief
+LANGSMITH_API_KEY=lsv2-...
+LANGSMITH_PROJECT=research-brief
+LANGCHAIN_TRACING_V2=true
+```
+
+Pipeline steps emit OpenTelemetry spans (console exporter) and LangSmith runs when keys are set. Completed briefs may include a `trace_id` field.
 
 ## Deploy to Streamlit Cloud
 
@@ -131,7 +153,8 @@ research-brief config
 - [x] Eval harness (10+ golden cases)
 - [x] GitHub Actions CI
 - [x] Live Streamlit Cloud deploy
-- [ ] Async job queue for long research runs
+- [x] Async job queue for long research runs
+- [x] OpenTelemetry + LangSmith tracing hooks
 
 ## License
 

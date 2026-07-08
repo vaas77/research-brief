@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "research-brief"
-version = "0.2.0"
+version = "0.3.0"
 description = "Multi-step research agent that produces cited briefs with tool traces."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -33,6 +33,13 @@ web = [
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
+]
+observability = [
+    "opentelemetry-api>=1.24.0",
+    "opentelemetry-sdk>=1.24.0",
+]
+langsmith = [
+    "langsmith>=0.1.0",
 ]
 
 [project.scripts]

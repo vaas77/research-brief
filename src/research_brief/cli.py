@@ -11,8 +11,9 @@ from rich.panel import Panel
 from rich.table import Table
 
 from research_brief.agent.pipeline import run_research
-from research_brief.config import get_settings
-from research_brief.models import ResearchRequest
+from research_brief.config import get_settings, langsmith_tracing_enabled
+from research_brief.jobs.worker import enqueue_research, get_job
+from research_brief.models import JobStatus, ResearchRequest
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 console = Console()
@@ -94,6 +95,51 @@ def serve(
     uvicorn.run("research_brief.api.main:app", host=host, port=port, reload=False)
 
 
+@app.command("job")
+def job(
+    topic: str = typer.Argument(..., help="Research topic or question."),
+    max_sources: int = typer.Option(3, help="Maximum sources to retrieve."),
+    search_provider: str = typer.Option("auto", help="auto, mock, or tavily"),
+    synthesis_mode: str = typer.Option("template", help="template or openai"),
+    fetch_mode: str = typer.Option("live", help="live or snippet"),
+    timeout_seconds: int = typer.Option(180, help="Max seconds to wait for completion."),
+) -> None:
+    """Enqueue research as a background job and wait for completion."""
+    import time
+
+    request = ResearchRequest(
+        topic=topic,
+        max_sources=max_sources,
+        search_provider=search_provider,  # type: ignore[arg-type]
+        synthesis_mode=synthesis_mode,  # type: ignore[arg-type]
+        fetch_mode=fetch_mode,  # type: ignore[arg-type]
+    )
+    created = enqueue_research(request)
+    console.print(f"[cyan]Job {created.id} queued ({created.status.value})[/cyan]")
+
+    deadline = time.time() + timeout_seconds
+    final = created
+    while time.time() < deadline:
+        final = get_job(created.id)
+        if final.status in {JobStatus.COMPLETED, JobStatus.FAILED}:
+            break
+        time.sleep(0.5)
+
+    if final.status == JobStatus.FAILED:
+        console.print(f"[red]{final.error or 'Job failed'}[/red]")
+        raise typer.Exit(code=1)
+    if final.status != JobStatus.COMPLETED or final.result is None:
+        console.print("[red]Job timed out[/red]")
+        raise typer.Exit(code=1)
+
+    result = final.result
+    console.print(Panel(result.brief, title=result.topic, border_style="green"))
+    if result.trace_id:
+        console.print(f"[dim]trace_id={result.trace_id}[/dim]")
+    _render_sources(result)
+    _render_trace(result)
+
+
 @app.command("web")
 def web(port: int = typer.Option(8501, help="Port for Streamlit server.")) -> None:
     """Launch the Streamlit web UI."""
@@ -126,7 +172,9 @@ def show_config() -> None:
             f"synthesis_mode={settings.synthesis_mode}\n"
             f"fetch_mode={settings.fetch_mode}\n"
             f"tavily_api_key={'set' if settings.tavily_api_key else 'missing'}\n"
-            f"openai_api_key={'set' if settings.openai_api_key else 'missing'}",
+            f"openai_api_key={'set' if settings.openai_api_key else 'missing'}\n"
+            f"otel_enabled={settings.otel_enabled}\n"
+            f"langsmith_tracing={langsmith_tracing_enabled(settings)}",
             title="Settings",
             border_style="cyan",
         )

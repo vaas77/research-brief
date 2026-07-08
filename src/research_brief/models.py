@@ -44,6 +44,28 @@ class ResearchRequest(BaseModel):
     fetch_mode: Literal["live", "snippet"] | None = None
 
 
+class JobStatus(str, Enum):
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class ResearchJob(BaseModel):
+    id: str
+    status: JobStatus
+    request: ResearchRequest
+    result: ResearchResult | None = None
+    error: str | None = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class ResearchJobCreated(BaseModel):
+    job_id: str
+    status: JobStatus
+
+
 class ResearchResult(BaseModel):
     topic: str
     brief: str
@@ -56,6 +78,7 @@ class ResearchResult(BaseModel):
     synthesis_mode: str = "template"
     synthesis_llm_used: bool = False
     citation_coverage_pct: float = 0.0
+    trace_id: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
@@ -63,3 +86,6 @@ class BriefDraft(BaseModel):
     topic: str
     sources: list[SourceDocument]
     sections: list[str] = Field(default_factory=list)
+
+
+ResearchJob.model_rebuild()
