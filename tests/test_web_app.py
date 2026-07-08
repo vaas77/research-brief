@@ -10,6 +10,9 @@ WEB_DIR = PROJECT_ROOT / "web"
 if str(WEB_DIR) not in sys.path:
     sys.path.insert(0, str(WEB_DIR))
 
+pytest.importorskip("streamlit")
+pytest.importorskip("pandas")
+
 from app import _run_cached  # noqa: E402
 from research_brief.models import ResearchRequest  # noqa: E402
 
