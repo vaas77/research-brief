@@ -1,0 +1,20 @@
+demo_rag_tradeoffs:
+  topic: "What are the tradeoffs of RAG vs fine-tuning?"
+  max_sources: 3
+  expectations:
+    min_sources: 2
+    min_citation_coverage_pct: 80
+    trace_steps: [search, fetch, synthesize, validate]
+    brief_contains:
+      - "Research brief"
+      - "[rag-1]"
+
+demo_agents:
+  topic: "How do LLM agents use tools?"
+  max_sources: 2
+  expectations:
+    min_sources: 2
+    min_citation_coverage_pct: 80
+    trace_steps: [search, fetch, synthesize, validate]
+    brief_contains:
+      - "[agent-1]"
