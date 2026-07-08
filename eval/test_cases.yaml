@@ -18,3 +18,93 @@ demo_agents:
     trace_steps: [search, fetch, synthesize, validate]
     brief_contains:
       - "[agent-1]"
+
+demo_react_reasoning:
+  topic: "What is ReAct for LLM orchestration?"
+  max_sources: 2
+  expectations:
+    min_sources: 2
+    min_citation_coverage_pct: 80
+    trace_steps: [search, fetch, synthesize, validate]
+    brief_contains:
+      - "[agent-1]"
+
+demo_retrieval_quality:
+  topic: "Why does retrieval quality matter for RAG?"
+  max_sources: 2
+  expectations:
+    min_sources: 2
+    min_citation_coverage_pct: 80
+    trace_steps: [search, fetch, synthesize, validate]
+    brief_contains:
+      - "[rag-2]"
+
+demo_finetuning_use_cases:
+  topic: "When should you fine-tune instead of retrieval?"
+  max_sources: 2
+  expectations:
+    min_sources: 2
+    min_citation_coverage_pct: 80
+    trace_steps: [search, fetch, synthesize, validate]
+    brief_contains:
+      - "[rag-3]"
+
+demo_toolformer:
+  topic: "How do models learn tool calling?"
+  max_sources: 2
+  expectations:
+    min_sources: 2
+    min_citation_coverage_pct: 80
+    trace_steps: [search, fetch, synthesize, validate]
+    brief_contains:
+      - "[agent-2]"
+
+demo_mlops_cicd:
+  topic: "What is MLOps CI/CD?"
+  max_sources: 2
+  expectations:
+    min_sources: 2
+    min_citation_coverage_pct: 80
+    trace_steps: [search, fetch, synthesize, validate]
+    brief_contains:
+      - "[mlops-1]"
+
+demo_model_monitoring:
+  topic: "How do teams monitor model drift in production?"
+  max_sources: 2
+  expectations:
+    min_sources: 2
+    min_citation_coverage_pct: 80
+    trace_steps: [search, fetch, synthesize, validate]
+    brief_contains:
+      - "[mlops-2]"
+
+demo_langchain_agents:
+  topic: "LangChain agent orchestration patterns"
+  max_sources: 2
+  expectations:
+    min_sources: 2
+    min_citation_coverage_pct: 80
+    trace_steps: [search, fetch, synthesize, validate]
+    brief_contains:
+      - "[agent-1]"
+
+demo_hybrid_rag_ft:
+  topic: "Can RAG and fine-tuning be combined?"
+  max_sources: 3
+  expectations:
+    min_sources: 2
+    min_citation_coverage_pct: 80
+    trace_steps: [search, fetch, synthesize, validate]
+    brief_contains:
+      - "[rag-3]"
+
+demo_production_genai:
+  topic: "Production GenAI system design"
+  max_sources: 3
+  expectations:
+    min_sources: 2
+    min_citation_coverage_pct: 80
+    trace_steps: [search, fetch, synthesize, validate]
+    brief_contains:
+      - "Research brief"

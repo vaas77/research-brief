@@ -2,18 +2,21 @@
 
 **Multi-step research agent that produces cited briefs — with tool traces, not vibes.**
 
-Portfolio project #2: an end-to-end GenAI application with orchestration, grounding checks, API, and eval harness.
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Tests](https://img.shields.io/badge/tests-23%20passed-brightgreen.svg)](#development)
+
+Portfolio GenAI/MLOps project: search → fetch → synthesize → validate, with optional Tavily web search and OpenAI synthesis gated by citation grounding checks.
 
 ## What it does
 
 Given a topic, the agent:
 
-1. **Search** — finds candidate sources
-2. **Fetch** — extracts relevant excerpts
-3. **Synthesize** — writes a structured brief with citations
-4. **Validate** — checks that citations map to real sources
+1. **Search** — Tavily web search (or mock corpus for offline demo)
+2. **Fetch** — pulls page excerpts from source URLs
+3. **Synthesize** — template brief or OpenAI polish
+4. **Validate** — citation coverage + grounding checks
 
-Every step is recorded in a **trace** for debugging and MLOps evals.
+Every step is recorded in an **agent trace** for debugging and evals.
 
 ## Quick start
 
@@ -22,15 +25,29 @@ git clone https://github.com/vaas77/research-brief.git
 cd research-brief
 python -m venv .venv
 .venv\Scripts\activate
-pip install -e ".[dev,llm]"
+pip install -e ".[dev,web,llm]"
+cp .env.example .env
+```
 
-# Demo with bundled mock sources (no API keys)
+### Offline demo (no API keys)
+
+```bash
 research-brief demo
+research-brief web
+```
 
-# Custom topic
-research-brief run "What are the tradeoffs of RAG vs fine-tuning?"
+### Live research (Tavily + optional OpenAI)
 
-# API server
+```env
+TAVILY_API_KEY=tvly-...
+OPENAI_API_KEY=sk-...
+SEARCH_PROVIDER=auto
+SYNTHESIS_MODE=openai
+FETCH_MODE=live
+```
+
+```bash
+research-brief run "Latest developments in AI agents" --search-provider tavily --synthesis-mode openai
 research-brief serve
 ```
 
@@ -48,49 +65,69 @@ flowchart LR
     Synth --> Trace
 ```
 
-**Design principle:** Retrieval and extraction run before synthesis. The LLM (when enabled) only writes from fetched excerpts.
+**Design principle:** Retrieval and extraction run before synthesis. The LLM only rephrases verified excerpts and must preserve source IDs.
 
 ## Project structure
 
 ```
-project2/
+research-brief/
 ├── src/research_brief/
 │   ├── agent/          # Pipeline orchestration
-│   ├── search/         # Search + fetch providers
-│   ├── synthesis/      # Template + optional OpenAI
-│   ├── validation/     # Citation grounding checks
+│   ├── search/         # Tavily + mock + fetch
+│   ├── synthesis/      # Template + OpenAI
+│   ├── validation/     # Citations + grounding
 │   └── api/            # FastAPI
+├── web/app.py          # Streamlit UI
 ├── eval/               # Golden test cases
-├── tests/
-└── web/                # Streamlit UI (coming soon)
+└── tests/
 ```
+
+## API
+
+```bash
+research-brief serve
+```
+
+- `GET /health`
+- `POST /research` with JSON body:
+
+```json
+{
+  "topic": "What are the tradeoffs of RAG vs fine-tuning?",
+  "max_sources": 3,
+  "search_provider": "mock",
+  "fetch_mode": "snippet",
+  "synthesis_mode": "template"
+}
+```
+
+## Deploy to Streamlit Cloud
+
+1. Push repo to GitHub
+2. [share.streamlit.io](https://share.streamlit.io) → **New app**
+3. Main file: `web/app.py`
+4. Optional secrets: `TAVILY_API_KEY`, `OPENAI_API_KEY`
 
 ## Development
 
 ```bash
-pip install -e ".[dev,llm]"
+pip install -e ".[dev,web,llm]"
 pytest -q
+research-brief config
 ```
-
-## Publish to GitHub
-
-```bash
-git init
-git add .
-git commit -m "Initial commit: Research Brief agent"
-git branch -M main
-git remote add origin https://github.com/vaas77/research-brief.git
-git push -u origin main
-```
-
-Create the empty repo on GitHub first (**New repository** → name: `research-brief` → Public → do not add README).
 
 ## Roadmap
 
-- [x] Agent pipeline with mock search + template synthesis
-- [x] Agent trace + citation validation
-- [x] CLI + FastAPI
-- [ ] Tavily / live web search
-- [ ] OpenAI synthesis with grounding gate
-- [ ] Streamlit UI
-- [ ] GitHub Actions CI + deploy
+- [x] Agent pipeline with trace
+- [x] Mock search corpus + Tavily integration
+- [x] Live URL fetch
+- [x] OpenAI synthesis with grounding validation
+- [x] CLI + FastAPI + Streamlit UI
+- [x] Eval harness (10+ golden cases)
+- [x] GitHub Actions CI
+- [ ] Live Streamlit Cloud deploy
+- [ ] Async job queue for long research runs
+
+## License
+
+MIT

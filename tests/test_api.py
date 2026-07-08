@@ -19,10 +19,12 @@ def test_research_endpoint():
             "max_sources": 2,
             "search_provider": "mock",
             "synthesis_mode": "template",
+            "fetch_mode": "snippet",
         },
     )
     assert response.status_code == 200
     payload = response.json()
     assert payload["topic"].startswith("How do LLM agents")
     assert len(payload["trace"]) == 4
+    assert payload["brief_template"]
     assert "[agent-1]" in payload["brief"]

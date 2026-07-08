@@ -6,6 +6,7 @@ from typing import Protocol
 from research_brief.config import get_settings
 from research_brief.models import AgentStep, AgentStepName, SourceDocument
 from research_brief.search.mock import get_mock_sources
+from research_brief.search.tavily import TavilySearchProvider
 
 
 class SearchProvider(Protocol):
@@ -28,19 +29,13 @@ class MockSearchProvider:
         return sources, step
 
 
-class TavilySearchProvider:
-    """Placeholder for live web search — wired in a later milestone."""
-
-    def search(self, topic: str, max_sources: int) -> tuple[list[SourceDocument], AgentStep]:
-        raise NotImplementedError(
-            "Tavily search is not implemented yet. Set SEARCH_PROVIDER=mock for now."
-        )
-
-
 def get_search_provider(name: str | None = None) -> SearchProvider:
-    provider = (name or get_settings().search_provider).lower()
+    settings = get_settings()
+    provider = (name or settings.search_provider).lower()
+    if provider == "auto":
+        provider = "tavily" if settings.tavily_api_key else "mock"
     if provider == "mock":
         return MockSearchProvider()
     if provider == "tavily":
         return TavilySearchProvider()
-    raise ValueError(f"Unknown search provider '{provider}'. Use mock or tavily.")
+    raise ValueError(f"Unknown search provider '{provider}'. Use auto, mock, or tavily.")

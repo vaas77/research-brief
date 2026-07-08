@@ -40,17 +40,21 @@ class ResearchRequest(BaseModel):
     topic: str
     max_sources: int = 3
     synthesis_mode: Literal["template", "openai"] | None = None
-    search_provider: Literal["mock", "tavily"] | None = None
+    search_provider: Literal["auto", "mock", "tavily"] | None = None
+    fetch_mode: Literal["live", "snippet"] | None = None
 
 
 class ResearchResult(BaseModel):
     topic: str
     brief: str
+    brief_template: str = ""
     key_points: list[str] = Field(default_factory=list)
     sources: list[SourceDocument] = Field(default_factory=list)
     citations: list[Citation] = Field(default_factory=list)
     trace: list[AgentStep] = Field(default_factory=list)
+    search_provider: str = "mock"
     synthesis_mode: str = "template"
+    synthesis_llm_used: bool = False
     citation_coverage_pct: float = 0.0
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 

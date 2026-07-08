@@ -60,15 +60,41 @@ MOCK_CORPUS: dict[str, list[SourceDocument]] = {
             ),
         ),
     ],
+    "mlops": [
+        SourceDocument(
+            id="mlops-1",
+            title="MLOps: Continuous delivery and automation pipelines in ML",
+            url="https://example.com/mlops-cicd",
+            snippet="CI/CD for ML includes data validation, training, and deployment gates.",
+            excerpt=(
+                "MLOps extends DevOps practices to machine learning by versioning data, code, and models. "
+                "Automated evaluation gates prevent low-quality models from reaching production."
+            ),
+        ),
+        SourceDocument(
+            id="mlops-2",
+            title="Model monitoring and drift detection",
+            url="https://example.com/model-monitoring",
+            snippet="Production models require drift and performance monitoring.",
+            excerpt=(
+                "Serving a model is not the end state. Teams monitor feature drift, prediction drift, "
+                "and business KPIs to trigger retraining or rollback decisions."
+            ),
+        ),
+    ],
 }
 
 
 def get_mock_sources(topic: str, max_sources: int) -> list[SourceDocument]:
     topic_lower = topic.lower()
-    if any(k in topic_lower for k in ("rag", "retrieval", "fine-tun", "finetun")):
+    if any(k in topic_lower for k in ("fine-tun", "finetun")):
+        pool = [MOCK_CORPUS["rag"][2], *MOCK_CORPUS["rag"][:2]]
+    elif any(k in topic_lower for k in ("rag", "retrieval")):
         pool = MOCK_CORPUS["rag"]
     elif any(k in topic_lower for k in ("agent", "tool", "langchain", "orchestr")):
         pool = MOCK_CORPUS["agents"]
+    elif any(k in topic_lower for k in ("mlops", "cicd", "deploy", "monitor")):
+        pool = MOCK_CORPUS["mlops"]
     else:
         pool = MOCK_CORPUS["rag"] + MOCK_CORPUS["agents"]
 

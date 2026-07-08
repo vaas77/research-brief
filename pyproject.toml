@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "research-brief"
-version = "0.1.0"
+version = "0.2.0"
 description = "Multi-step research agent that produces cited briefs with tool traces."
 readme = "README.md"
 requires-python = ">=3.11"
