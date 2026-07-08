@@ -3,6 +3,7 @@
 **Multi-step research agent that produces cited briefs — with tool traces, not vibes.**
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://research-brief-aqpfqsjyvybcrv594j4kk5.streamlit.app/)
 [![Tests](https://img.shields.io/badge/tests-23%20passed-brightgreen.svg)](#development)
 
 Portfolio GenAI/MLOps project: search → fetch → synthesize → validate, with optional Tavily web search and OpenAI synthesis gated by citation grounding checks.
@@ -17,6 +18,10 @@ Given a topic, the agent:
 4. **Validate** — citation coverage + grounding checks
 
 Every step is recorded in an **agent trace** for debugging and evals.
+
+**Live demo:** https://research-brief-aqpfqsjyvybcrv594j4kk5.streamlit.app/
+
+Try **Generate brief** with mock search (no keys) or Tavily for live web research.
 
 ## Quick start
 
@@ -125,7 +130,7 @@ research-brief config
 - [x] CLI + FastAPI + Streamlit UI
 - [x] Eval harness (10+ golden cases)
 - [x] GitHub Actions CI
-- [ ] Live Streamlit Cloud deploy
+- [x] Live Streamlit Cloud deploy
 - [ ] Async job queue for long research runs
 
 ## License
